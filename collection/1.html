@@ -3240,4 +3240,288 @@ Dagmar gir deg ikke bare en vakker veske, men også en følelse av raffinert sti
 </div>
 <style> .reviews_stars {display: none !important;} .product__policies.rte.small--text-center {display: none !important;} .cart__item-row.text-center {display: none !important;} </style>
 </body>
+
+<script>
+  // Add to Cart and Open Drawer functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const addToCartButton = document.querySelector('[data-add-to-cart]');
+    const cartDrawer = document.getElementById('CartDrawer');
+    
+    if (addToCartButton) {
+        addToCartButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Get product data from the current page
+            const productForm = this.closest('form') || document.querySelector('[action="/cart/add"]');
+            const variantId = productForm ? productForm.querySelector('[name="id"]').value : null;
+            const quantity = productForm ? (productForm.querySelector('[name="quantity"]') || {value: 1}).value : 1;
+            
+            if (!variantId) {
+                console.error('No variant ID found');
+                return;
+            }
+            
+            // Disable button and show loading state
+            const buttonText = this.querySelector('[data-add-to-cart-text]');
+            const originalText = buttonText.textContent;
+            buttonText.textContent = 'Legger til...';
+            this.disabled = true;
+            
+            // Add to cart via AJAX
+            fetch('/cart/add.js', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: variantId,
+                    quantity: parseInt(quantity)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update cart drawer with new product
+                return updateCartDrawer();
+            })
+            .then(() => {
+                // Open the cart drawer
+                openCartDrawer();
+                
+                // Reset button state
+                buttonText.textContent = originalText;
+                this.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error adding to cart:', error);
+                // Reset button state
+                buttonText.textContent = originalText;
+                this.disabled = false;
+                alert('Der oppstod en feil ved å legge produktet i handlekurven.');
+            });
+        });
+    }
+    
+    // Function to update cart drawer content
+    function updateCartDrawer() {
+        return fetch('/cart.js')
+            .then(response => response.json())
+            .then(cart => {
+                // Update cart count
+                const cartCountElement = document.querySelector('[data-count]');
+                if (cartCountElement) {
+                    cartCountElement.setAttribute('data-count', cart.item_count);
+                }
+                
+                // Update subtotal
+                const subtotalElements = document.querySelectorAll('[data-subtotal], [data-cart-subtotal]');
+                subtotalElements.forEach(el => {
+                    if (el.hasAttribute('data-cart-subtotal')) {
+                        el.setAttribute('data-cart-subtotal', cart.total_price);
+                    } else {
+                        el.textContent = formatMoney(cart.total_price);
+                    }
+                });
+                
+                // Update cart items
+                return updateCartItems(cart.items);
+            });
+    }
+    
+    // Function to update cart items HTML
+    function updateCartItems(items) {
+        const cartItemsContainer = document.querySelector('.cart__items');
+        if (!cartItemsContainer || items.length === 0) {
+            showEmptyCart();
+            return;
+        }
+        
+        let cartItemsHTML = '';
+        
+        items.forEach(item => {
+            const variantKey = `${item.variant_id}:${item.key.split(':')[1] || ''}`;
+            cartItemsHTML += `
+                <div class="cart__item" data-key="${item.key}">
+                    <div class="cart__image">
+                        <a href="${item.url}" style="height: 0; padding-bottom: 100.0%;">
+                            <img class="lazyloaded" 
+                                 src="${item.featured_image ? item.featured_image.url : ''}" 
+                                 alt="${item.product_title}"
+                                 sizes="103px">
+                        </a>
+                    </div>
+                    <div class="cart__item-details">
+                        <div class="cart__item-title">
+                            <a href="${item.url}" class="cart__item-name">
+                                ${item.product_title}
+                            </a>
+                            ${item.variant_title ? `<div class="cart__item--variants"><div><span>Variant:</span> ${item.variant_title}</div></div>` : ''}
+                        </div>
+                        <div class="cart__item-sub">
+                            <div>
+                                <div class="js-qty__wrapper">
+                                    <label for="cart_updates_${item.key}" class="hidden-label">Mengde</label>
+                                    <input type="text" 
+                                           id="cart_updates_${item.key}" 
+                                           name="updates[]" 
+                                           class="js-qty__num" 
+                                           value="${item.quantity}" 
+                                           min="0" 
+                                           pattern="[0-9]*" 
+                                           data-id="${item.key}">
+                                    <button type="button" class="js-qty__adjust js-qty__adjust--minus" aria-label="Reduser antall varer med én">
+                                        <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-minus" viewBox="0 0 20 20">
+                                            <path fill="#444" d="M17.543 11.029H2.1A1.032 1.032 0 0 1 1.071 10c0-.566.463-1.029 1.029-1.029h15.443c.566 0 1.029.463 1.029 1.029 0 .566-.463 1.029-1.029 1.029z"></path>
+                                        </svg>
+                                        <span class="icon__fallback-text" aria-hidden="true">−</span>
+                                    </button>
+                                    <button type="button" class="js-qty__adjust js-qty__adjust--plus" aria-label="Øk antall varer med én">
+                                        <svg aria-hidden="true" focusable="false" role="presentation" class="icon icon-plus" viewBox="0 0 20 20">
+                                            <path fill="#444" d="M17.409 8.929h-6.695V2.258c0-.566-.506-1.029-1.071-1.029s-1.071.463-1.071 1.029v6.671H1.967C1.401 8.929.938 9.435.938 10s.463 1.071 1.029 1.071h6.605V17.7c0 .566.506 1.029 1.071 1.029s1.071-.463 1.071-1.029v-6.629h6.695c.566 0 1.029-.506 1.029-1.071s-.463-1.071-1.029-1.071z"></path>
+                                        </svg>
+                                        <span class="icon__fallback-text" aria-hidden="true">+</span>
+                                    </button>
+                                </div>
+                                <div class="cart__remove">
+                                    <a href="/cart/change?id=${item.key}&quantity=0" class="text-link">
+                                        Fjerne
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="cart__item-price-col text-right">
+                                <span class="cart__price">
+                                    ${formatMoney(item.line_price)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        cartItemsContainer.innerHTML = cartItemsHTML;
+        
+        // Reinitialize quantity controls
+        initQuantityControls();
+        
+        // Hide empty cart message
+        hideEmptyCart();
+    }
+    
+    // Function to open cart drawer
+    function openCartDrawer() {
+        if (cartDrawer) {
+            cartDrawer.classList.add('drawer--is-open');
+            cartDrawer.focus();
+            document.body.classList.add('drawer-open');
+        }
+    }
+    
+    // Function to close cart drawer
+    function closeCartDrawer() {
+        if (cartDrawer) {
+            cartDrawer.classList.remove('drawer--is-open');
+            document.body.classList.remove('drawer-open');
+        }
+    }
+    
+    // Function to show empty cart
+    function showEmptyCart() {
+        const emptyCart = document.querySelector('.drawer__cart-empty');
+        const cartContent = document.querySelector('.drawer__scrollable');
+        if (emptyCart && cartContent) {
+            cartContent.style.display = 'none';
+            emptyCart.style.display = 'block';
+        }
+    }
+    
+    // Function to hide empty cart
+    function hideEmptyCart() {
+        const emptyCart = document.querySelector('.drawer__cart-empty');
+        const cartContent = document.querySelector('.drawer__scrollable');
+        if (emptyCart && cartContent) {
+            cartContent.style.display = 'block';
+            emptyCart.style.display = 'none';
+        }
+    }
+    
+    // Function to format money (Norwegian Kroner)
+    function formatMoney(cents) {
+        const amount = cents / 100;
+        return amount.toFixed(2).replace('.', ',') + ' kr';
+    }
+    
+    // Initialize quantity controls for cart items
+    function initQuantityControls() {
+        const qtyInputs = document.querySelectorAll('.js-qty__num');
+        const minusButtons = document.querySelectorAll('.js-qty__adjust--minus');
+        const plusButtons = document.querySelectorAll('.js-qty__adjust--plus');
+        
+        // Handle quantity input changes
+        qtyInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                updateQuantity(this.dataset.id, this.value);
+            });
+        });
+        
+        // Handle minus buttons
+        minusButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('.js-qty__num');
+                const newQty = Math.max(0, parseInt(input.value) - 1);
+                input.value = newQty;
+                updateQuantity(input.dataset.id, newQty);
+            });
+        });
+        
+        // Handle plus buttons
+        plusButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('.js-qty__num');
+                const newQty = parseInt(input.value) + 1;
+                input.value = newQty;
+                updateQuantity(input.dataset.id, newQty);
+            });
+        });
+    }
+    
+    // Function to update item quantity
+    function updateQuantity(itemKey, quantity) {
+        fetch('/cart/change.js', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                id: itemKey,
+                quantity: parseInt(quantity)
+            })
+        })
+        .then(response => response.json())
+        .then(() => {
+            updateCartDrawer();
+        })
+        .catch(error => {
+            console.error('Error updating quantity:', error);
+        });
+    }
+    
+    // Handle close button
+    const closeButton = document.querySelector('.js-drawer-close');
+    if (closeButton) {
+        closeButton.addEventListener('click', closeCartDrawer);
+    }
+    
+    // Handle clicking outside drawer to close
+    cartDrawer?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeCartDrawer();
+        }
+    });
+    
+    // Initialize existing quantity controls on page load
+    initQuantityControls();
+});
+</script>
 </html>
