@@ -3241,288 +3241,187 @@ Dagmar gir deg ikke bare en vakker veske, men også en følelse av raffinert sti
 <style> .reviews_stars {display: none !important;} .product__policies.rte.small--text-center {display: none !important;} .cart__item-row.text-center {display: none !important;} </style>
 </body>
 
-
 <script>
-  // Add to Cart and Open Drawer functionality
+
+  // Simple Add to Cart and Show Drawer functionality
 document.addEventListener('DOMContentLoaded', function() {
     const addToCartButton = document.querySelector('[data-add-to-cart]');
     const cartDrawer = document.getElementById('CartDrawer');
     
-    if (addToCartButton) {
+    if (addToCartButton && cartDrawer) {
         addToCartButton.addEventListener('click', function(e) {
             e.preventDefault();
             
-            // Get product data from the current page
+            // Get product form data
             const productForm = this.closest('form') || document.querySelector('[action="/cart/add"]');
-            const variantId = productForm ? productForm.querySelector('[name="id"]').value : null;
-            const quantity = productForm ? (productForm.querySelector('[name="quantity"]') || {value: 1}).value : 1;
             
-            if (!variantId) {
-                console.error('No variant ID found');
+            if (!productForm) {
+                console.error('No product form found');
                 return;
             }
             
-            // Disable button and show loading state
+            // Show loading state
             const buttonText = this.querySelector('[data-add-to-cart-text]');
             const originalText = buttonText.textContent;
             buttonText.textContent = 'Legger til...';
             this.disabled = true;
             
-            // Add to cart via AJAX, fallback to form submission
-            const formData = new FormData();
-            formData.append('id', variantId);
-            formData.append('quantity', quantity);
+            // Submit the form data via AJAX
+            const formData = new FormData(productForm);
             
-            fetch('/cart/add.js', {
+            fetch('/cart/add', {
                 method: 'POST',
                 body: formData
             })
             .then(response => {
                 if (response.ok) {
-                    return response.json();
+                    // Product added successfully, now show the drawer
+                    showCartDrawer();
+                } else {
+                    throw new Error('Failed to add to cart');
                 }
-                throw new Error('Network response was not ok');
             })
-            .then(data => {
-                // Update cart drawer with new product
-                return updateCartDrawer();
+            .catch(error => {
+                console.error('Error adding to cart:', error);
+                alert('Der oppstod en feil ved å legge produktet i handlekurven.');
             })
-            .then(() => {
-                // Open the cart drawer
-                openCartDrawer();
-                
+            .finally(() => {
                 // Reset button state
                 buttonText.textContent = originalText;
                 this.disabled = false;
-            })
-            .catch(error => {
-                console.log('AJAX add to cart failed, falling back to form submission');
-                
-                // Fallback: submit the form traditionally
-                if (productForm) {
-                    // Temporarily change form action to add to cart
-                    const originalAction = productForm.action;
-                    productForm.action = '/cart/add';
-                    
-                    // Add a hidden input to redirect back to current page with cart open
-                    const redirectInput = document.createElement('input');
-                    redirectInput.type = 'hidden';
-                    redirectInput.name = 'return_to';
-                    redirectInput.value = window.location.pathname + '?cart=open';
-                    productForm.appendChild(redirectInput);
-                    
-                    // Submit the form
-                    productForm.submit();
-                } else {
-                    // Reset button state and show error
-                    buttonText.textContent = originalText;
-                    this.disabled = false;
-                    alert('Der oppstod en feil ved å legge produktet i handlekurven.');
-                }
             });
         });
     }
     
-    // Function to update cart drawer content by fetching cart HTML
-    function updateCartDrawer() {
-        return fetch('/cart?view=drawer', {
-            method: 'GET',
-            headers: {
-                'Accept': 'text/html'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            // Parse the HTML response
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Extract cart items from the response
-            const newCartItems = doc.querySelector('.cart__items');
-            const newSubtotal = doc.querySelector('[data-subtotal]');
-            const newCartCount = doc.querySelector('[data-count]');
-            
-            // Update existing cart drawer
-            const currentCartItems = document.querySelector('.cart__items');
-            const currentSubtotal = document.querySelector('[data-subtotal]');
-            const currentCartCount = document.querySelector('[data-count]');
-            
-            if (newCartItems && currentCartItems) {
-                currentCartItems.innerHTML = newCartItems.innerHTML;
-                // Reinitialize quantity controls for new items
-                initQuantityControls();
-            }
-            
-            if (newSubtotal && currentSubtotal) {
-                currentSubtotal.textContent = newSubtotal.textContent;
-            }
-            
-            if (newCartCount && currentCartCount) {
-                currentCartCount.setAttribute('data-count', newCartCount.getAttribute('data-count') || '0');
-                currentCartCount.setAttribute('data-cart-subtotal', newCartCount.getAttribute('data-cart-subtotal') || '0');
-            }
-            
-            // Check if cart is empty
-            const itemCount = parseInt(newCartCount?.getAttribute('data-count') || '0');
-            if (itemCount === 0) {
-                showEmptyCart();
-            } else {
-                hideEmptyCart();
-            }
-        })
-        .catch(error => {
-            console.error('Error updating cart drawer:', error);
-            // Fallback: reload the page to ensure cart is updated
-            // window.location.reload();
-        });
-    }
-    
-
-    
-    // Function to open cart drawer
-    function openCartDrawer() {
+    // Function to show cart drawer
+    function showCartDrawer() {
         if (cartDrawer) {
             cartDrawer.classList.add('drawer--is-open');
+            cartDrawer.setAttribute('tabindex', '-1');
             cartDrawer.focus();
+            
+            // Add body class to prevent scrolling
             document.body.classList.add('drawer-open');
+            
+            // Add appear animations
+            const animationElements = cartDrawer.querySelectorAll('.appear-animation');
+            animationElements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 0.1}s`;
+                el.classList.add('appear-animation--active');
+            });
         }
     }
     
-    // Function to close cart drawer
-    function closeCartDrawer() {
+    // Function to hide cart drawer
+    function hideCartDrawer() {
         if (cartDrawer) {
             cartDrawer.classList.remove('drawer--is-open');
             document.body.classList.remove('drawer-open');
+            
+            // Remove appear animations
+            const animationElements = cartDrawer.querySelectorAll('.appear-animation');
+            animationElements.forEach(el => {
+                el.classList.remove('appear-animation--active');
+                el.style.animationDelay = '';
+            });
         }
     }
     
-    // Function to show empty cart
-    function showEmptyCart() {
-        const emptyCart = document.querySelector('.drawer__cart-empty');
-        const cartContent = document.querySelector('.drawer__scrollable');
-        if (emptyCart && cartContent) {
-            cartContent.style.display = 'none';
-            emptyCart.style.display = 'block';
+    // Handle close button
+    const closeButton = cartDrawer?.querySelector('.js-drawer-close');
+    if (closeButton) {
+        closeButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            hideCartDrawer();
+        });
+    }
+    
+    // Handle clicking outside drawer to close (on the backdrop)
+    if (cartDrawer) {
+        cartDrawer.addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideCartDrawer();
+            }
+        });
+    }
+    
+    // Handle escape key to close drawer
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && cartDrawer.classList.contains('drawer--is-open')) {
+            hideCartDrawer();
         }
-    }
+    });
     
-    // Function to hide empty cart
-    function hideEmptyCart() {
-        const emptyCart = document.querySelector('.drawer__cart-empty');
-        const cartContent = document.querySelector('.drawer__scrollable');
-        if (emptyCart && cartContent) {
-            cartContent.style.display = 'block';
-            emptyCart.style.display = 'none';
-        }
-    }
+    // Initialize quantity controls for existing cart items
+    initQuantityControls();
     
-    // Function to format money (Norwegian Kroner)
-    function formatMoney(cents) {
-        const amount = cents / 100;
-        return amount.toFixed(2).replace('.', ',') + ' kr';
-    }
-    
-    // Initialize quantity controls for cart items
+    // Function to initialize quantity controls
     function initQuantityControls() {
-        const qtyInputs = document.querySelectorAll('.js-qty__num');
-        const minusButtons = document.querySelectorAll('.js-qty__adjust--minus');
-        const plusButtons = document.querySelectorAll('.js-qty__adjust--plus');
+        const qtyInputs = cartDrawer?.querySelectorAll('.js-qty__num');
+        const minusButtons = cartDrawer?.querySelectorAll('.js-qty__adjust--minus');
+        const plusButtons = cartDrawer?.querySelectorAll('.js-qty__adjust--plus');
         
         // Handle quantity input changes
-        qtyInputs.forEach(input => {
+        qtyInputs?.forEach(input => {
             input.addEventListener('change', function() {
-                updateQuantity(this.dataset.id, this.value);
+                updateQuantity(this);
             });
         });
         
         // Handle minus buttons
-        minusButtons.forEach(button => {
-            button.addEventListener('click', function() {
+        minusButtons?.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
                 const input = this.parentElement.querySelector('.js-qty__num');
-                const newQty = Math.max(0, parseInt(input.value) - 1);
+                const newQty = Math.max(0, parseInt(input.value || 0) - 1);
                 input.value = newQty;
-                updateQuantity(input.dataset.id, newQty);
+                updateQuantity(input);
             });
         });
         
         // Handle plus buttons
-        plusButtons.forEach(button => {
-            button.addEventListener('click', function() {
+        plusButtons?.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
                 const input = this.parentElement.querySelector('.js-qty__num');
-                const newQty = parseInt(input.value) + 1;
+                const newQty = parseInt(input.value || 0) + 1;
                 input.value = newQty;
-                updateQuantity(input.dataset.id, newQty);
+                updateQuantity(input);
+            });
+        });
+        
+        // Handle remove links
+        const removeLinks = cartDrawer?.querySelectorAll('.cart__remove a');
+        removeLinks?.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Extract the URL and navigate to it
+                window.location.href = this.href;
             });
         });
     }
     
-    // Function to update item quantity
-    function updateQuantity(itemKey, quantity) {
-        // Use form submission approach instead of AJAX
-        const form = document.createElement('form');
-        form.method = 'post';
-        form.action = '/cart';
+    // Function to update quantity
+    function updateQuantity(input) {
+        const quantity = parseInt(input.value || 0);
+        const itemKey = input.dataset.id;
         
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = `updates[${itemKey}]`;
-        input.value = quantity;
-        
-        form.appendChild(input);
-        document.body.appendChild(form);
-        
-        // For better UX, we can still try AJAX first, fallback to form submission
-        fetch('/cart/change.js', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                id: itemKey,
-                quantity: parseInt(quantity)
-            })
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            }
-            throw new Error('Network response was not ok');
-        })
-        .then(() => {
-            updateCartDrawer();
-        })
-        .catch(error => {
-            console.log('AJAX failed, falling back to form submission');
-            // Fallback to form submission if AJAX fails
+        if (itemKey) {
+            // Create a form to update the cart
+            const form = document.createElement('form');
+            form.method = 'post';
+            form.action = '/cart';
+            form.style.display = 'none';
+            
+            const updateInput = document.createElement('input');
+            updateInput.type = 'hidden';
+            updateInput.name = 'updates[]';
+            updateInput.value = quantity;
+            
+            form.appendChild(updateInput);
+            document.body.appendChild(form);
             form.submit();
-        })
-        .finally(() => {
-            document.body.removeChild(form);
-        });
-    }
-    
-    // Handle close button
-    const closeButton = document.querySelector('.js-drawer-close');
-    if (closeButton) {
-        closeButton.addEventListener('click', closeCartDrawer);
-    }
-    
-    // Handle clicking outside drawer to close
-    cartDrawer?.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeCartDrawer();
         }
-    });
-    
-    // Check URL parameters on page load to open cart if needed
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('cart') === 'open') {
-        setTimeout(() => {
-            openCartDrawer();
-            // Clean up URL
-            window.history.replaceState({}, '', window.location.pathname);
-        }, 500);
     }
 });
 </script>
