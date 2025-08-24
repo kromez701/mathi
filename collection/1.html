@@ -3242,8 +3242,7 @@ Dagmar gir deg ikke bare en vakker veske, men også en følelse av raffinert sti
 </body>
 
 <script>
-
-  // Simple Add to Cart and Show Drawer functionality
+  // Standalone Cart Drawer Modal functionality
 document.addEventListener('DOMContentLoaded', function() {
     const addToCartButton = document.querySelector('[data-add-to-cart]');
     const cartDrawer = document.getElementById('CartDrawer');
@@ -3252,44 +3251,21 @@ document.addEventListener('DOMContentLoaded', function() {
         addToCartButton.addEventListener('click', function(e) {
             e.preventDefault();
             
-            // Get product form data
-            const productForm = this.closest('form') || document.querySelector('[action="/cart/add"]');
-            
-            if (!productForm) {
-                console.error('No product form found');
-                return;
-            }
-            
-            // Show loading state
+            // Show loading state briefly for better UX
             const buttonText = this.querySelector('[data-add-to-cart-text]');
             const originalText = buttonText.textContent;
             buttonText.textContent = 'Legger til...';
             this.disabled = true;
             
-            // Submit the form data via AJAX
-            const formData = new FormData(productForm);
-            
-            fetch('/cart/add', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    // Product added successfully, now show the drawer
-                    showCartDrawer();
-                } else {
-                    throw new Error('Failed to add to cart');
-                }
-            })
-            .catch(error => {
-                console.error('Error adding to cart:', error);
-                alert('Der oppstod en feil ved å legge produktet i handlekurven.');
-            })
-            .finally(() => {
+            // Simulate adding to cart with a short delay
+            setTimeout(() => {
                 // Reset button state
                 buttonText.textContent = originalText;
                 this.disabled = false;
-            });
+                
+                // Show the cart drawer
+                showCartDrawer();
+            }, 500);
         });
     }
     
@@ -3352,7 +3328,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Initialize quantity controls for existing cart items
+    // Initialize quantity controls for the cart items
     initQuantityControls();
     
     // Function to initialize quantity controls
@@ -3364,7 +3340,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Handle quantity input changes
         qtyInputs?.forEach(input => {
             input.addEventListener('change', function() {
-                updateQuantity(this);
+                console.log(`Quantity changed to: ${this.value}`);
+                // Here you could update the display or handle the change
             });
         });
         
@@ -3373,9 +3350,9 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
                 const input = this.parentElement.querySelector('.js-qty__num');
-                const newQty = Math.max(0, parseInt(input.value || 0) - 1);
+                const newQty = Math.max(0, parseInt(input.value || 1) - 1);
                 input.value = newQty;
-                updateQuantity(input);
+                console.log(`Quantity decreased to: ${newQty}`);
             });
         });
         
@@ -3384,9 +3361,9 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
                 const input = this.parentElement.querySelector('.js-qty__num');
-                const newQty = parseInt(input.value || 0) + 1;
+                const newQty = parseInt(input.value || 1) + 1;
                 input.value = newQty;
-                updateQuantity(input);
+                console.log(`Quantity increased to: ${newQty}`);
             });
         });
         
@@ -3395,33 +3372,10 @@ document.addEventListener('DOMContentLoaded', function() {
         removeLinks?.forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                // Extract the URL and navigate to it
-                window.location.href = this.href;
+                console.log('Remove item clicked');
+                // Here you could hide the item or handle removal
             });
         });
-    }
-    
-    // Function to update quantity
-    function updateQuantity(input) {
-        const quantity = parseInt(input.value || 0);
-        const itemKey = input.dataset.id;
-        
-        if (itemKey) {
-            // Create a form to update the cart
-            const form = document.createElement('form');
-            form.method = 'post';
-            form.action = '/cart';
-            form.style.display = 'none';
-            
-            const updateInput = document.createElement('input');
-            updateInput.type = 'hidden';
-            updateInput.name = 'updates[]';
-            updateInput.value = quantity;
-            
-            form.appendChild(updateInput);
-            document.body.appendChild(form);
-            form.submit();
-        }
     }
 });
 </script>
