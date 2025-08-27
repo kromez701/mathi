@@ -3100,4 +3100,174 @@ Dagmar gir deg ikke bare en vakker veske, men også en følelse av raffinert sti
 </div>
 <style> .reviews_stars {display: none !important;} .product__policies.rte.small--text-center {display: none !important;} .cart__item-row.text-center {display: none !important;} </style>
 </body>
+
+<script>
+  // Configuration object for URL mappings based on groups and color combinations
+const VARIANT_URL_MAPPING = {
+  // Group 1 (Buy 1) - No discount
+  group1: {
+    'Brun': 'https://store.com/buy-1/brown',
+    'Mørk Brun': 'https://store.com/buy-1/dark-brown', 
+    'Svart': 'https://store.com/buy-1/black'
+  },
+  
+  // Group 2 (Buy 2) - 20% extra discount - All color combinations
+  group2: {
+    'Brun_Brun': 'https://store.com/buy-2/brown-brown',
+    'Brun_Mørk Brun': 'https://store.com/buy-2/brown-dark-brown',
+    'Brun_Svart': 'https://store.com/buy-2/brown-black',
+    'Mørk Brun_Brun': 'https://store.com/buy-2/dark-brown-brown',
+    'Mørk Brun_Mørk Brun': 'https://store.com/buy-2/dark-brown-dark-brown',
+    'Mørk Brun_Svart': 'https://store.com/buy-2/dark-brown-black',
+    'Svart_Brun': 'https://store.com/buy-2/black-brown',
+    'Svart_Mørk Brun': 'https://store.com/buy-2/black-dark-brown',
+    'Svart_Svart': 'https://store.com/buy-2/black-black'
+  },
+  
+  // Group 3 (Buy 3) - 30% extra discount - All color combinations  
+  group3: {
+    'Brun_Brun_Brun': 'https://store.com/buy-3/brown-brown-brown',
+    'Brun_Brun_Mørk Brun': 'https://store.com/buy-3/brown-brown-dark-brown',
+    'Brun_Brun_Svart': 'https://store.com/buy-3/brown-brown-black',
+    'Brun_Mørk Brun_Brun': 'https://store.com/buy-3/brown-dark-brown-brown',
+    'Brun_Mørk Brun_Mørk Brun': 'https://store.com/buy-3/brown-dark-brown-dark-brown',
+    'Brun_Mørk Brun_Svart': 'https://store.com/buy-3/brown-dark-brown-black',
+    'Brun_Svart_Brun': 'https://store.com/buy-3/brown-black-brown',
+    'Brun_Svart_Mørk Brun': 'https://store.com/buy-3/brown-black-dark-brown',
+    'Brun_Svart_Svart': 'https://store.com/buy-3/brown-black-black',
+    'Mørk Brun_Brun_Brun': 'https://store.com/buy-3/dark-brown-brown-brown',
+    'Mørk Brun_Brun_Mørk Brun': 'https://store.com/buy-3/dark-brown-brown-dark-brown',
+    'Mørk Brun_Brun_Svart': 'https://store.com/buy-3/dark-brown-brown-black',
+    'Mørk Brun_Mørk Brun_Brun': 'https://store.com/buy-3/dark-brown-dark-brown-brown',
+    'Mørk Brun_Mørk Brun_Mørk Brun': 'https://store.com/buy-3/dark-brown-dark-brown-dark-brown',
+    'Mørk Brun_Mørk Brun_Svart': 'https://store.com/buy-3/dark-brown-dark-brown-black',
+    'Mørk Brun_Svart_Brun': 'https://store.com/buy-3/dark-brown-black-brown',
+    'Mørk Brun_Svart_Mørk Brun': 'https://store.com/buy-3/dark-brown-black-dark-brown',
+    'Mørk Brun_Svart_Svart': 'https://store.com/buy-3/dark-brown-black-black',
+    'Svart_Brun_Brun': 'https://store.com/buy-3/black-brown-brown',
+    'Svart_Brun_Mørk Brun': 'https://store.com/buy-3/black-brown-dark-brown',
+    'Svart_Brun_Svart': 'https://store.com/buy-3/black-brown-black',
+    'Svart_Mørk Brun_Brun': 'https://store.com/buy-3/black-dark-brown-brown',
+    'Svart_Mørk Brun_Mørk Brun': 'https://store.com/buy-3/black-dark-brown-dark-brown',
+    'Svart_Mørk Brun_Svart': 'https://store.com/buy-3/black-dark-brown-black',
+    'Svart_Svart_Brun': 'https://store.com/buy-3/black-black-brown',
+    'Svart_Svart_Mørk Brun': 'https://store.com/buy-3/black-black-dark-brown',
+    'Svart_Svart_Svart': 'https://store.com/buy-3/black-black-black'
+  },
+  
+  // Default fallback
+  'default': 'https://store.com/checkout'
+};
+
+// Function to get the selected color for a specific group and item
+function getSelectedColor(groupId, itemId) {
+  const colorSelect = document.getElementById(`pennywise-volume-group-detail-${groupId}-item-${itemId}-option-Farge`);
+  return colorSelect ? colorSelect.value : 'Brun'; // Default to Brun if not found
+}
+
+// Function to get the color combination string for the selected group
+function getColorCombination(groupId) {
+  const colors = [];
+  
+  // Collect colors based on group size
+  for (let i = 1; i <= groupId; i++) {
+    const color = getSelectedColor(groupId, i);
+    colors.push(color);
+  }
+  
+  // Join colors with underscore
+  return colors.join('_');
+}
+
+// Function to get the currently selected group (1, 2, or 3)
+function getSelectedGroup() {
+  for (let i = 1; i <= 3; i++) {
+    const radio = document.getElementById(`pennywise-volume-select-${i}`);
+    if (radio && radio.checked) {
+      return i;
+    }
+  }
+  // If no radio is explicitly checked, check for selected class
+  for (let i = 1; i <= 3; i++) {
+    const group = document.getElementById(`pennywise-volume-group-${i}`);
+    if (group && group.classList.contains('pennywise-volume-group-selected')) {
+      return i;
+    }
+  }
+  return 2; // Default to group 2 (appears to be pre-selected)
+}
+
+// Function to build redirect URL based on selected group and color combination
+function buildRedirectUrl() {
+  const selectedGroup = getSelectedGroup();
+  const colorCombination = getColorCombination(selectedGroup);
+  
+  // Build URL based on group and color combination
+  switch(selectedGroup) {
+    case 1:
+      return VARIANT_URL_MAPPING.group1[colorCombination] || VARIANT_URL_MAPPING.default;
+    case 2:
+      return VARIANT_URL_MAPPING.group2[colorCombination] || VARIANT_URL_MAPPING.default;
+    case 3:
+      return VARIANT_URL_MAPPING.group3[colorCombination] || VARIANT_URL_MAPPING.default;
+    default:
+      return VARIANT_URL_MAPPING.default;
+  }
+}
+
+// Function to handle the add to cart button click
+function handleAddToCart(event) {
+  event.preventDefault(); // Prevent default form submission
+  
+  const redirectUrl = buildRedirectUrl();
+  
+  // Optional: Add analytics tracking here
+  console.log('Redirecting to:', redirectUrl);
+  
+  // Redirect to the constructed URL
+  window.location.href = redirectUrl;
+}
+
+// Function to initialize the redirect functionality
+function initializeVolumeRedirect() {
+  const addToCartButton = document.getElementById('pennywise-volume-button');
+  
+  if (addToCartButton) {
+    // Remove any existing event listeners
+    addToCartButton.removeEventListener('click', handleAddToCart);
+    
+    // Add the redirect handler
+    addToCartButton.addEventListener('click', handleAddToCart);
+  } else {
+    console.error('Add to cart button not found');
+  }
+  
+  // Also handle form submission
+  const form = document.querySelector('#pennywise-volume-widget form');
+  if (form) {
+    form.removeEventListener('submit', handleAddToCart);
+    form.addEventListener('submit', handleAddToCart);
+  }
+}
+
+// Enhanced URL mapping with bundle support - REMOVED (not needed for this use case)
+
+// Enhanced redirect URL builder - REMOVED (not needed for this use case)
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeVolumeRedirect);
+} else {
+  initializeVolumeRedirect();
+}
+
+// Export functions for external use if needed
+window.volumeRedirectHandler = {
+  initialize: initializeVolumeRedirect,
+  buildUrl: buildRedirectUrl,
+  getSelectedGroup: getSelectedGroup,
+  getSelectedColor: getSelectedColor,
+  getColorCombination: getColorCombination
+};
+</script>
 </html>
