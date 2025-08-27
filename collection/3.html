@@ -4042,4 +4042,386 @@ Rewritten: "Pia™ | Stilfull lærveske med flettede håndtak</div><div class="g
 </div>
 <style> .reviews_stars {display: none !important;} .product__policies.rte.small--text-center {display: none !important;} .cart__item-row.text-center {display: none !important;} </style>
 </body>
+
+<script>
+  // Configuration object for URL mappings based on groups and color combinations
+const VARIANT_URL_MAPPING = {
+  // Group 1 (Buy 1) - No discount
+  group1: {
+    'Brun': 'https://store.com/buy-1/brun',
+    'Svart': 'https://store.com/buy-1/svart', 
+    'Grå': 'https://store.com/buy-1/graa'
+  },
+  
+  // Group 2 (Buy 2) - 20% extra discount - All color combinations
+  group2: {
+    'Brun_Brun': 'https://store.com/buy-2/brun-brun',
+    'Brun_Svart': 'https://store.com/buy-2/brun-svart',
+    'Brun_Grå': 'https://store.com/buy-2/brun-graa',
+    'Svart_Brun': 'https://store.com/buy-2/svart-brun',
+    'Svart_Svart': 'https://store.com/buy-2/svart-svart',
+    'Svart_Grå': 'https://store.com/buy-2/svart-graa',
+    'Grå_Brun': 'https://store.com/buy-2/graa-brun',
+    'Grå_Svart': 'https://store.com/buy-2/graa-svart',
+    'Grå_Grå': 'https://store.com/buy-2/graa-graa'
+  },
+  
+  // Group 3 (Buy 3) - 30% extra discount - All color combinations  
+  group3: {
+    'Brun_Brun_Brun': 'https://store.com/buy-3/brun-brun-brun',
+    'Brun_Brun_Svart': 'https://store.com/buy-3/brun-brun-svart',
+    'Brun_Brun_Grå': 'https://store.com/buy-3/brun-brun-graa',
+    'Brun_Svart_Brun': 'https://store.com/buy-3/brun-svart-brun',
+    'Brun_Svart_Svart': 'https://store.com/buy-3/brun-svart-svart',
+    'Brun_Svart_Grå': 'https://store.com/buy-3/brun-svart-graa',
+    'Brun_Grå_Brun': 'https://store.com/buy-3/brun-graa-brun',
+    'Brun_Grå_Svart': 'https://store.com/buy-3/brun-graa-svart',
+    'Brun_Grå_Grå': 'https://store.com/buy-3/brun-graa-graa',
+    'Svart_Brun_Brun': 'https://store.com/buy-3/svart-brun-brun',
+    'Svart_Brun_Svart': 'https://store.com/buy-3/svart-brun-svart',
+    'Svart_Brun_Grå': 'https://store.com/buy-3/svart-brun-graa',
+    'Svart_Svart_Brun': 'https://store.com/buy-3/svart-svart-brun',
+    'Svart_Svart_Svart': 'https://store.com/buy-3/svart-svart-svart',
+    'Svart_Svart_Grå': 'https://store.com/buy-3/svart-svart-graa',
+    'Svart_Grå_Brun': 'https://store.com/buy-3/svart-graa-brun',
+    'Svart_Grå_Svart': 'https://store.com/buy-3/svart-graa-svart',
+    'Svart_Grå_Grå': 'https://store.com/buy-3/svart-graa-graa',
+    'Grå_Brun_Brun': 'https://store.com/buy-3/graa-brun-brun',
+    'Grå_Brun_Svart': 'https://store.com/buy-3/graa-brun-svart',
+    'Grå_Brun_Grå': 'https://store.com/buy-3/graa-brun-graa',
+    'Grå_Svart_Brun': 'https://store.com/buy-3/graa-svart-brun',
+    'Grå_Svart_Svart': 'https://store.com/buy-3/graa-svart-svart',
+    'Grå_Svart_Grå': 'https://store.com/buy-3/graa-svart-graa',
+    'Grå_Grå_Brun': 'https://store.com/buy-3/graa-graa-brun',
+    'Grå_Grå_Svart': 'https://store.com/buy-3/graa-graa-svart',
+    'Grå_Grå_Grå': 'https://store.com/buy-3/graa-graa-graa'
+  },
+  
+  // Default fallback
+  'default': 'https://store.com/checkout'
+};
+
+// Function to get the selected color for a specific group and item
+function getSelectedColor(groupId, itemId) {
+  const colorSelect = document.getElementById(`pennywise-volume-group-detail-${groupId}-item-${itemId}-option-Farge`);
+  return colorSelect ? colorSelect.value : 'Brun'; // Default to Brun if not found
+}
+
+// Function to get the color combination string for the selected group
+function getColorCombination(groupId) {
+  const colors = [];
+  
+  // Collect colors based on group size
+  for (let i = 1; i <= groupId; i++) {
+    const color = getSelectedColor(groupId, i);
+    colors.push(color);
+  }
+  
+  // Join colors with underscore
+  return colors.join('_');
+}
+
+// Function to get the currently selected group (1, 2, or 3)
+function getSelectedGroup() {
+  // First check for checked radio buttons
+  for (let i = 1; i <= 3; i++) {
+    const radio = document.getElementById(`pennywise-volume-select-${i}`);
+    if (radio && radio.checked) {
+      return i;
+    }
+  }
+  
+  // If no radio is explicitly checked, check for selected class
+  for (let i = 1; i <= 3; i++) {
+    const group = document.getElementById(`pennywise-volume-group-${i}`);
+    if (group && group.classList.contains('pennywise-volume-group-selected')) {
+      return i;
+    }
+  }
+  
+  return 2; // Default to group 2 (appears to be pre-selected based on your HTML)
+}
+
+// Function to build redirect URL based on selected group and color combination
+function buildRedirectUrl() {
+  const selectedGroup = getSelectedGroup();
+  const colorCombination = getColorCombination(selectedGroup);
+  
+  console.log(`Selected Group: ${selectedGroup}, Color Combination: ${colorCombination}`);
+  
+  // Build URL based on group and color combination
+  switch(selectedGroup) {
+    case 1:
+      return VARIANT_URL_MAPPING.group1[colorCombination] || VARIANT_URL_MAPPING.default;
+    case 2:
+      return VARIANT_URL_MAPPING.group2[colorCombination] || VARIANT_URL_MAPPING.default;
+    case 3:
+      return VARIANT_URL_MAPPING.group3[colorCombination] || VARIANT_URL_MAPPING.default;
+    default:
+      return VARIANT_URL_MAPPING.default;
+  }
+}
+
+// Function to handle the add to cart button click
+function handleAddToCart(event) {
+  event.preventDefault(); // Prevent default form submission
+  
+  const redirectUrl = buildRedirectUrl();
+  
+  // Log for debugging - remove in production
+  console.log('Selected Group:', getSelectedGroup());
+  console.log('Color Combination:', getColorCombination(getSelectedGroup()));
+  console.log('Redirecting to:', redirectUrl);
+  
+  // Optional: Add analytics tracking here
+  // gtag('event', 'purchase_intent', {
+  //   'group': getSelectedGroup(),
+  //   'colors': getColorCombination(getSelectedGroup())
+  // });
+  
+  // Show loading state (optional)
+  const button = event.target;
+  const originalText = button.textContent;
+  button.textContent = 'BEHANDLER...';
+  button.disabled = true;
+  
+  // Small delay to show loading state, then redirect
+  setTimeout(() => {
+    window.location.href = redirectUrl;
+  }, 300);
+}
+
+// Function to update pricing display when selections change
+function updatePricingDisplay() {
+  const selectedGroup = getSelectedGroup();
+  const basePrice = 729.00; // Base price from your HTML
+  
+  let discountRate = 0;
+  switch(selectedGroup) {
+    case 1: discountRate = 0; break;
+    case 2: discountRate = 0.20; break;
+    case 3: discountRate = 0.30; break;
+  }
+  
+  const discountedPrice = basePrice * (1 - discountRate);
+  const totalPrice = discountedPrice * selectedGroup;
+  const originalTotal = basePrice * selectedGroup;
+  
+  // Update individual item prices
+  for (let i = 1; i <= selectedGroup; i++) {
+    const newPriceElement = document.getElementById(`pennywise-volume-select-${selectedGroup}-item-${i}-price-new`);
+    const oldPriceElement = document.getElementById(`pennywise-volume-select-${selectedGroup}-item-${i}-price-old`);
+    
+    if (newPriceElement) {
+      newPriceElement.textContent = `${discountedPrice.toFixed(2).replace('.', ',')} kr`;
+    }
+    if (oldPriceElement && discountRate > 0) {
+      oldPriceElement.textContent = `${basePrice.toFixed(2).replace('.', ',')} kr`;
+    }
+  }
+  
+  // Update total prices
+  const totalNewElement = document.getElementById('pennywise-volume-total-price-new');
+  const totalOldElement = document.getElementById('pennywise-volume-total-price-old');
+  
+  if (totalNewElement) {
+    totalNewElement.textContent = `${totalPrice.toFixed(2).replace('.', ',')} kr`;
+  }
+  if (totalOldElement && discountRate > 0) {
+    totalOldElement.textContent = `${originalTotal.toFixed(2).replace('.', ',')} kr`;
+  }
+}
+
+// Function to handle group selection changes
+function handleGroupChange(groupId) {
+  // Remove selected class from all groups
+  for (let i = 1; i <= 3; i++) {
+    const group = document.getElementById(`pennywise-volume-group-${i}`);
+    if (group) {
+      group.classList.remove('pennywise-volume-group-selected');
+    }
+    
+    const radio = document.getElementById(`pennywise-volume-select-${i}`);
+    if (radio) {
+      radio.checked = false;
+    }
+  }
+  
+  // Add selected class to chosen group
+  const selectedGroup = document.getElementById(`pennywise-volume-group-${groupId}`);
+  const selectedRadio = document.getElementById(`pennywise-volume-select-${groupId}`);
+  
+  if (selectedGroup) {
+    selectedGroup.classList.add('pennywise-volume-group-selected');
+  }
+  if (selectedRadio) {
+    selectedRadio.checked = true;
+  }
+  
+  // Update pricing display
+  updatePricingDisplay();
+  
+  console.log(`Group ${groupId} selected`);
+}
+
+// Function to handle color option changes
+function handleColorChange(groupId, itemId, color) {
+  console.log(`Color changed for Group ${groupId}, Item ${itemId}: ${color}`);
+  
+  // Update the product image if needed (optional enhancement)
+  const imageElement = document.getElementById(`pennywise-volume-select-${groupId}-item-${itemId}-image`);
+  if (imageElement && color) {
+    // Update image source based on color selection
+    // This would need to be customized based on your image naming convention
+    const baseImageUrl = 'https://cdn.shopify.com/s/files/1/0952/2682/2986/files/';
+    const imageMapping = {
+      'Brun': '73_200x200.png',
+      'Svart': '73_svart_200x200.png', // Adjust these filenames as needed
+      'Grå': '73_graa_200x200.png'
+    };
+    
+    if (imageMapping[color]) {
+      imageElement.src = `${baseImageUrl}${imageMapping[color]}?v=1755720879`;
+      imageElement.alt = `Alexa Premium Shoulder Bag - ${color}`;
+    }
+  }
+}
+
+// Function to initialize all event listeners
+function initializeEventListeners() {
+  // Add click handlers for group selection
+  for (let i = 1; i <= 3; i++) {
+    const groupElement = document.getElementById(`pennywise-volume-group-${i}`);
+    if (groupElement) {
+      groupElement.addEventListener('click', () => handleGroupChange(i));
+    }
+    
+    const radioElement = document.getElementById(`pennywise-volume-select-${i}`);
+    if (radioElement) {
+      radioElement.addEventListener('change', () => handleGroupChange(i));
+    }
+  }
+  
+  // Add change handlers for color selections
+  for (let groupId = 1; groupId <= 3; groupId++) {
+    for (let itemId = 1; itemId <= 3; itemId++) {
+      const colorSelect = document.getElementById(`pennywise-volume-group-detail-${groupId}-item-${itemId}-option-Farge`);
+      if (colorSelect) {
+        colorSelect.addEventListener('change', (e) => {
+          handleColorChange(groupId, itemId, e.target.value);
+        });
+      }
+    }
+  }
+}
+
+// Function to initialize the volume pricing functionality
+function initializeVolumePricing() {
+  const addToCartButton = document.getElementById('pennywise-volume-button');
+  
+  if (addToCartButton) {
+    // Remove any existing event listeners to prevent duplicates
+    addToCartButton.removeEventListener('click', handleAddToCart);
+    
+    // Add the redirect handler
+    addToCartButton.addEventListener('click', handleAddToCart);
+    
+    console.log('Volume pricing handler initialized successfully');
+  } else {
+    console.error('Add to cart button not found - ID: pennywise-volume-button');
+  }
+  
+  // Also handle form submission as backup
+  const form = document.querySelector('#pennywise-volume-widget form');
+  if (form) {
+    form.removeEventListener('submit', handleAddToCart);
+    form.addEventListener('submit', handleAddToCart);
+  }
+  
+  // Initialize all event listeners
+  initializeEventListeners();
+  
+  // Set initial pricing display
+  updatePricingDisplay();
+}
+
+// Function to update URLs dynamically (useful if you need to change URLs after page load)
+function updateUrlMapping(newMapping) {
+  Object.assign(VARIANT_URL_MAPPING, newMapping);
+}
+
+// Function to get current selection details (useful for debugging or analytics)
+function getCurrentSelection() {
+  const selectedGroup = getSelectedGroup();
+  const colorCombination = getColorCombination(selectedGroup);
+  const redirectUrl = buildRedirectUrl();
+  
+  return {
+    group: selectedGroup,
+    colors: colorCombination.split('_'),
+    colorCombination: colorCombination,
+    redirectUrl: redirectUrl,
+    totalItems: selectedGroup,
+    discountRate: selectedGroup === 1 ? 0 : (selectedGroup === 2 ? 0.20 : 0.30)
+  };
+}
+
+// Function to validate selection before processing
+function validateSelection() {
+  const selectedGroup = getSelectedGroup();
+  const colors = [];
+  
+  for (let i = 1; i <= selectedGroup; i++) {
+    const color = getSelectedColor(selectedGroup, i);
+    if (!color || !['Brun', 'Svart', 'Grå'].includes(color)) {
+      console.error(`Invalid color selection for item ${i}: ${color}`);
+      return false;
+    }
+    colors.push(color);
+  }
+  
+  console.log(`Validation passed - Group: ${selectedGroup}, Colors: ${colors.join(', ')}`);
+  return true;
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeVolumePricing);
+} else {
+  initializeVolumePricing();
+}
+
+// Global functions for external access and the existing pw_ functions
+window.pw_on_radio = function(groupId) {
+  handleGroupChange(groupId);
+};
+
+window.pw_on_option_select = function(groupId, itemId, optionName) {
+  if (optionName === 'Farge') {
+    const colorSelect = document.getElementById(`pennywise-volume-group-detail-${groupId}-item-${itemId}-option-${optionName}`);
+    if (colorSelect) {
+      handleColorChange(groupId, itemId, colorSelect.value);
+    }
+  }
+};
+
+window.pw_on_product_select = function(groupId, itemId) {
+  // Handle product selection changes if needed
+  console.log(`Product selection changed for Group ${groupId}, Item ${itemId}`);
+};
+
+// Export functions for external use
+window.volumePricingHandler = {
+  initialize: initializeVolumePricing,
+  buildUrl: buildRedirectUrl,
+  getSelectedGroup: getSelectedGroup,
+  getSelectedColor: getSelectedColor,
+  getColorCombination: getColorCombination,
+  getCurrentSelection: getCurrentSelection,
+  updateUrlMapping: updateUrlMapping,
+  validateSelection: validateSelection,
+  handleGroupChange: handleGroupChange,
+  handleColorChange: handleColorChange
+};
+</script>
 </html>
