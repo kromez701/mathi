@@ -1,7 +1,7 @@
 #CollectionSection-template--26237534765386__featured_collection_tGHGVw {
   display: none !important;
 }
-select.pennywise-volume-dropdown {
+select#pennywise-volume-group-detail-2-item-1-product-select {
   pointer-events: none;
   background: #f0f0f0; /* optional visual cue */
 }
