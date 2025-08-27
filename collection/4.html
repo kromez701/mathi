@@ -4534,4 +4534,267 @@ Rewritten: "Pia™ | Stilfull lærveske med flettede håndtak</div><div class="g
 </div>
 <style> .reviews_stars {display: none !important;} .product__policies.rte.small--text-center {display: none !important;} .cart__item-row.text-center {display: none !important;} </style>
 </body>
+
+<script>
+  // Configuration object for URL mappings based on groups and color combinations
+const VARIANT_URL_MAPPING = {
+  // Group 1 (Buy 1) - No discount
+  group1: {
+    'Brun': 'https://store.com/buy-1/brun', 
+    'Svart': 'https://store.com/buy-1/svart',
+    'Bordeaux': 'https://store.com/buy-1/bordeaux',
+    'Beige': 'https://store.com/buy-1/beige'
+  },
+  
+  // Group 2 (Buy 2) - 20% extra discount - All color combinations
+  group2: {
+    'Brun_Brun': 'https://store.com/buy-2/brun-brun',
+    'Brun_Svart': 'https://store.com/buy-2/brun-svart',
+    'Brun_Bordeaux': 'https://store.com/buy-2/brun-bordeaux',
+    'Brun_Beige': 'https://store.com/buy-2/brun-beige',
+    'Svart_Brun': 'https://store.com/buy-2/svart-brun',
+    'Svart_Svart': 'https://store.com/buy-2/svart-svart',
+    'Svart_Bordeaux': 'https://store.com/buy-2/svart-bordeaux',
+    'Svart_Beige': 'https://store.com/buy-2/svart-beige',
+    'Bordeaux_Brun': 'https://store.com/buy-2/bordeaux-brun',
+    'Bordeaux_Svart': 'https://store.com/buy-2/bordeaux-svart',
+    'Bordeaux_Bordeaux': 'https://store.com/buy-2/bordeaux-bordeaux',
+    'Bordeaux_Beige': 'https://store.com/buy-2/bordeaux-beige',
+    'Beige_Brun': 'https://store.com/buy-2/beige-brun',
+    'Beige_Svart': 'https://store.com/buy-2/beige-svart',
+    'Beige_Bordeaux': 'https://store.com/buy-2/beige-bordeaux',
+    'Beige_Beige': 'https://store.com/buy-2/beige-beige'
+  },
+  
+  // Group 3 (Buy 3) - 30% extra discount - All color combinations  
+  group3: {
+    'Brun_Brun_Brun': 'https://store.com/buy-3/brun-brun-brun',
+    'Brun_Brun_Svart': 'https://store.com/buy-3/brun-brun-svart',
+    'Brun_Brun_Bordeaux': 'https://store.com/buy-3/brun-brun-bordeaux',
+    'Brun_Brun_Beige': 'https://store.com/buy-3/brun-brun-beige',
+    'Brun_Svart_Brun': 'https://store.com/buy-3/brun-svart-brun',
+    'Brun_Svart_Svart': 'https://store.com/buy-3/brun-svart-svart',
+    'Brun_Svart_Bordeaux': 'https://store.com/buy-3/brun-svart-bordeaux',
+    'Brun_Svart_Beige': 'https://store.com/buy-3/brun-svart-beige',
+    'Brun_Bordeaux_Brun': 'https://store.com/buy-3/brun-bordeaux-brun',
+    'Brun_Bordeaux_Svart': 'https://store.com/buy-3/brun-bordeaux-svart',
+    'Brun_Bordeaux_Bordeaux': 'https://store.com/buy-3/brun-bordeaux-bordeaux',
+    'Brun_Bordeaux_Beige': 'https://store.com/buy-3/brun-bordeaux-beige',
+    'Brun_Beige_Brun': 'https://store.com/buy-3/brun-beige-brun',
+    'Brun_Beige_Svart': 'https://store.com/buy-3/brun-beige-svart',
+    'Brun_Beige_Bordeaux': 'https://store.com/buy-3/brun-beige-bordeaux',
+    'Brun_Beige_Beige': 'https://store.com/buy-3/brun-beige-beige',
+    'Svart_Brun_Brun': 'https://store.com/buy-3/svart-brun-brun',
+    'Svart_Brun_Svart': 'https://store.com/buy-3/svart-brun-svart',
+    'Svart_Brun_Bordeaux': 'https://store.com/buy-3/svart-brun-bordeaux',
+    'Svart_Brun_Beige': 'https://store.com/buy-3/svart-brun-beige',
+    'Svart_Svart_Brun': 'https://store.com/buy-3/svart-svart-brun',
+    'Svart_Svart_Svart': 'https://store.com/buy-3/svart-svart-svart',
+    'Svart_Svart_Bordeaux': 'https://store.com/buy-3/svart-svart-bordeaux',
+    'Svart_Svart_Beige': 'https://store.com/buy-3/svart-svart-beige',
+    'Svart_Bordeaux_Brun': 'https://store.com/buy-3/svart-bordeaux-brun',
+    'Svart_Bordeaux_Svart': 'https://store.com/buy-3/svart-bordeaux-svart',
+    'Svart_Bordeaux_Bordeaux': 'https://store.com/buy-3/svart-bordeaux-bordeaux',
+    'Svart_Bordeaux_Beige': 'https://store.com/buy-3/svart-bordeaux-beige',
+    'Svart_Beige_Brun': 'https://store.com/buy-3/svart-beige-brun',
+    'Svart_Beige_Svart': 'https://store.com/buy-3/svart-beige-svart',
+    'Svart_Beige_Bordeaux': 'https://store.com/buy-3/svart-beige-bordeaux',
+    'Svart_Beige_Beige': 'https://store.com/buy-3/svart-beige-beige',
+    'Bordeaux_Brun_Brun': 'https://store.com/buy-3/bordeaux-brun-brun',
+    'Bordeaux_Brun_Svart': 'https://store.com/buy-3/bordeaux-brun-svart',
+    'Bordeaux_Brun_Bordeaux': 'https://store.com/buy-3/bordeaux-brun-bordeaux',
+    'Bordeaux_Brun_Beige': 'https://store.com/buy-3/bordeaux-brun-beige',
+    'Bordeaux_Svart_Brun': 'https://store.com/buy-3/bordeaux-svart-brun',
+    'Bordeaux_Svart_Svart': 'https://store.com/buy-3/bordeaux-svart-svart',
+    'Bordeaux_Svart_Bordeaux': 'https://store.com/buy-3/bordeaux-svart-bordeaux',
+    'Bordeaux_Svart_Beige': 'https://store.com/buy-3/bordeaux-svart-beige',
+    'Bordeaux_Bordeaux_Brun': 'https://store.com/buy-3/bordeaux-bordeaux-brun',
+    'Bordeaux_Bordeaux_Svart': 'https://store.com/buy-3/bordeaux-bordeaux-svart',
+    'Bordeaux_Bordeaux_Bordeaux': 'https://store.com/buy-3/bordeaux-bordeaux-bordeaux',
+    'Bordeaux_Bordeaux_Beige': 'https://store.com/buy-3/bordeaux-bordeaux-beige',
+    'Bordeaux_Beige_Brun': 'https://store.com/buy-3/bordeaux-beige-brun',
+    'Bordeaux_Beige_Svart': 'https://store.com/buy-3/bordeaux-beige-svart',
+    'Bordeaux_Beige_Bordeaux': 'https://store.com/buy-3/bordeaux-beige-bordeaux',
+    'Bordeaux_Beige_Beige': 'https://store.com/buy-3/bordeaux-beige-beige',
+    'Beige_Brun_Brun': 'https://store.com/buy-3/beige-brun-brun',
+    'Beige_Brun_Svart': 'https://store.com/buy-3/beige-brun-svart',
+    'Beige_Brun_Bordeaux': 'https://store.com/buy-3/beige-brun-bordeaux',
+    'Beige_Brun_Beige': 'https://store.com/buy-3/beige-brun-beige',
+    'Beige_Svart_Brun': 'https://store.com/buy-3/beige-svart-brun',
+    'Beige_Svart_Svart': 'https://store.com/buy-3/beige-svart-svart',
+    'Beige_Svart_Bordeaux': 'https://store.com/buy-3/beige-svart-bordeaux',
+    'Beige_Svart_Beige': 'https://store.com/buy-3/beige-svart-beige',
+    'Beige_Bordeaux_Brun': 'https://store.com/buy-3/beige-bordeaux-brun',
+    'Beige_Bordeaux_Svart': 'https://store.com/buy-3/beige-bordeaux-svart',
+    'Beige_Bordeaux_Bordeaux': 'https://store.com/buy-3/beige-bordeaux-bordeaux',
+    'Beige_Bordeaux_Beige': 'https://store.com/buy-3/beige-bordeaux-beige',
+    'Beige_Beige_Brun': 'https://store.com/buy-3/beige-beige-brun',
+    'Beige_Beige_Svart': 'https://store.com/buy-3/beige-beige-svart',
+    'Beige_Beige_Bordeaux': 'https://store.com/buy-3/beige-beige-bordeaux',
+    'Beige_Beige_Beige': 'https://store.com/buy-3/beige-beige-beige'
+  },
+    'Beige_Svart_Kaffe': 'https://store.com/buy-3/beige-svart-kaffe',
+    'Beige_Svart_Brun': 'https://store.com/buy-3/beige-svart-brun',
+    'Beige_Svart_Svart': 'https://store.com/buy-3/beige-svart-svart',
+    'Beige_Svart_Bordeaux': 'https://store.com/buy-3/beige-svart-bordeaux',
+    'Beige_Svart_Beige': 'https://store.com/buy-3/beige-svart-beige',
+    'Beige_Bordeaux_Kaffe': 'https://store.com/buy-3/beige-bordeaux-kaffe',
+    'Beige_Bordeaux_Brun': 'https://store.com/buy-3/beige-bordeaux-brun',
+    'Beige_Bordeaux_Svart': 'https://store.com/buy-3/beige-bordeaux-svart',
+    'Beige_Bordeaux_Bordeaux': 'https://store.com/buy-3/beige-bordeaux-bordeaux',
+    'Beige_Bordeaux_Beige': 'https://store.com/buy-3/beige-bordeaux-beige',
+    'Beige_Beige_Kaffe': 'https://store.com/buy-3/beige-beige-kaffe',
+    'Beige_Beige_Brun': 'https://store.com/buy-3/beige-beige-brun',
+    'Beige_Beige_Svart': 'https://store.com/buy-3/beige-beige-svart',
+    'Beige_Beige_Bordeaux': 'https://store.com/buy-3/beige-beige-bordeaux',
+    'Beige_Beige_Beige': 'https://store.com/buy-3/beige-beige-beige'
+  },
+  
+  // Default fallback
+  'default': 'https://store.com/checkout'
+};
+
+// Function to get the selected color for a specific group and item
+function getSelectedColor(groupId, itemId) {
+  const colorSelect = document.getElementById(`pennywise-volume-group-detail-${groupId}-item-${itemId}-option-Farge`);
+  return colorSelect ? colorSelect.value : 'Brun'; // Default to Brun if not found
+}
+
+// Function to get the color combination string for the selected group
+function getColorCombination(groupId) {
+  const colors = [];
+  
+  // Collect colors based on group size
+  for (let i = 1; i <= groupId; i++) {
+    const color = getSelectedColor(groupId, i);
+    colors.push(color);
+  }
+  
+  // Join colors with underscore
+  return colors.join('_');
+}
+
+// Function to get the currently selected group (1, 2, or 3)
+function getSelectedGroup() {
+  // First check for checked radio buttons
+  for (let i = 1; i <= 3; i++) {
+    const radio = document.getElementById(`pennywise-volume-select-${i}`);
+    if (radio && radio.checked) {
+      return i;
+    }
+  }
+  
+  // If no radio is explicitly checked, check for selected class
+  for (let i = 1; i <= 3; i++) {
+    const group = document.getElementById(`pennywise-volume-group-${i}`);
+    if (group && group.classList.contains('pennywise-volume-group-selected')) {
+      return i;
+    }
+  }
+  
+  return 2; // Default to group 2 (appears to be pre-selected based on your HTML)
+}
+
+// Function to build redirect URL based on selected group and color combination
+function buildRedirectUrl() {
+  const selectedGroup = getSelectedGroup();
+  const colorCombination = getColorCombination(selectedGroup);
+  
+  console.log(`Selected Group: ${selectedGroup}, Color Combination: ${colorCombination}`);
+  
+  // Build URL based on group and color combination
+  switch(selectedGroup) {
+    case 1:
+      return VARIANT_URL_MAPPING.group1[colorCombination] || VARIANT_URL_MAPPING.default;
+    case 2:
+      return VARIANT_URL_MAPPING.group2[colorCombination] || VARIANT_URL_MAPPING.default;
+    case 3:
+      return VARIANT_URL_MAPPING.group3[colorCombination] || VARIANT_URL_MAPPING.default;
+    default:
+      return VARIANT_URL_MAPPING.default;
+  }
+}
+
+// Function to handle the add to cart button click
+function handleAddToCart(event) {
+  event.preventDefault(); // Prevent default form submission
+  
+  const redirectUrl = buildRedirectUrl();
+  
+  // Log for debugging - remove in production
+  console.log('Selected Group:', getSelectedGroup());
+  console.log('Color Combination:', getColorCombination(getSelectedGroup()));
+  console.log('Redirecting to:', redirectUrl);
+  
+  // Optional: Add analytics tracking here
+  // gtag('event', 'purchase_intent', {
+  //   'group': getSelectedGroup(),
+  //   'colors': getColorCombination(getSelectedGroup())
+  // });
+  
+  // Redirect to the constructed URL
+  window.location.href = redirectUrl;
+}
+
+// Function to initialize the redirect functionality
+function initializeVolumeRedirect() {
+  const addToCartButton = document.getElementById('pennywise-volume-button');
+  
+  if (addToCartButton) {
+    // Remove any existing event listeners to prevent duplicates
+    addToCartButton.removeEventListener('click', handleAddToCart);
+    
+    // Add the redirect handler
+    addToCartButton.addEventListener('click', handleAddToCart);
+    
+    console.log('Volume redirect handler initialized successfully');
+  } else {
+    console.error('Add to cart button not found - ID: pennywise-volume-button');
+  }
+  
+  // Also handle form submission as backup
+  const form = document.querySelector('#pennywise-volume-widget form');
+  if (form) {
+    form.removeEventListener('submit', handleAddToCart);
+    form.addEventListener('submit', handleAddToCart);
+  }
+}
+
+// Function to update URLs dynamically (useful if you need to change URLs after page load)
+function updateUrlMapping(newMapping) {
+  Object.assign(VARIANT_URL_MAPPING, newMapping);
+}
+
+// Function to get current selection details (useful for debugging or analytics)
+function getCurrentSelection() {
+  const selectedGroup = getSelectedGroup();
+  const colorCombination = getColorCombination(selectedGroup);
+  const redirectUrl = buildRedirectUrl();
+  
+  return {
+    group: selectedGroup,
+    colors: colorCombination.split('_'),
+    colorCombination: colorCombination,
+    redirectUrl: redirectUrl
+  };
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeVolumeRedirect);
+} else {
+  initializeVolumeRedirect();
+}
+
+// Export functions for external use if needed
+window.volumeRedirectHandler = {
+  initialize: initializeVolumeRedirect,
+  buildUrl: buildRedirectUrl,
+  getSelectedGroup: getSelectedGroup,
+  getSelectedColor: getSelectedColor,
+  getColorCombination: getColorCombination,
+  getCurrentSelection: getCurrentSelection,
+  updateUrlMapping: updateUrlMapping
+};
+</script>
 </html>
